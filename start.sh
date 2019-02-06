@@ -24,13 +24,13 @@ if [ "$1" == "backup" ]; then
     for db in $databases; do
         echo "dumping $db"
 
-        mysqldump --force --opt --host=$MYSQL_HOST --port=$MYSQL_PORT --user=$MYSQL_USER --databases $db ${PASS_OPT} | gzip > "/tmp/$db.gz"
+        mysqldump --force --opt --host=$MYSQL_HOST --port=$MYSQL_PORT --user=$MYSQL_USER --databases $db ${PASS_OPT} | gzip > "/tmp/$db-`date +%Y-%m-%d--%H:%M:%S`.gz"
 
         if [ $? == 0 ]; then
-            yes | /usr/local/bin/azure storage blob upload /tmp/$db.gz $AZURE_STORAGE_CONTAINER -c "DefaultEndpointsProtocol=https;BlobEndpoint=https://$AZURE_STORAGE_ACCOUNT.blob.core.windows.net/;AccountName=$AZURE_STORAGE_ACCOUNT;AccountKey=$AZURE_STORAGE_ACCESS_KEY"
+            yes | /usr/local/bin/azure storage blob upload /tmp/$db*.gz $AZURE_STORAGE_CONTAINER -c "DefaultEndpointsProtocol=https;BlobEndpoint=https://$AZURE_STORAGE_ACCOUNT.blob.core.windows.net/;AccountName=$AZURE_STORAGE_ACCOUNT;AccountKey=$AZURE_STORAGE_ACCESS_KEY"
 
             if [ $? == 0 ]; then
-                rm /tmp/$db.gz
+                rm /tmp/$db*.gz
             else
                 >&2 echo "couldn't transfer $db.gz to Azure"
             fi
